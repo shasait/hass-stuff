@@ -1,0 +1,18 @@
+alias: Automatisierung - Außenbeleuchtung
+description: ""
+trigger:
+  - platform: time_pattern
+    hours: "*"
+    minutes: /15
+    seconds: "0"
+condition: []
+action:
+  - service: script.time_sun_manager
+    metadata: {}
+    data:
+      label_name: Außenbeleuchtung
+      on_time_earliest: "16:00"
+      on_time_latest: "22:00"
+      off_time_earliest: "04:00"
+      off_time_latest: "10:00"
+mode: single
