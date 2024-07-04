@@ -1,0 +1,62 @@
+alias: Automatisierung - Rollladen
+description: ""
+trigger:
+  - platform: time_pattern
+    hours: "*"
+    minutes: /15
+    seconds: "0"
+condition: []
+action:
+  - service: script.sun_cover_manager
+    metadata: {}
+    data:
+      label_name: Richtung SO
+      sun_azimuth_above: 50
+      sun_azimuth_below: 225
+      time_latest_action: "18:30"
+  - service: script.sun_cover_manager
+    metadata: {}
+    data:
+      label_name: Richtung SW
+      sun_azimuth_above: 135
+      sun_azimuth_below: 315
+      time_latest_action: "18:30"
+  - service: script.sun_cover_manager
+    metadata: {}
+    data:
+      label_name: Richtung NO
+      sun_azimuth_above: 320
+      sun_azimuth_below: 130
+      time_latest_action: "18:30"
+  - service: script.sun_cover_manager
+    metadata: {}
+    data:
+      label_name: Richtung NW
+      sun_azimuth_above: 230
+      sun_azimuth_below: 46
+      time_latest_action: "18:30"
+  - service: script.time_sun_manager
+    metadata: {}
+    data:
+      label_name: Rollladen EG
+      off_time_earliest: "06:30"
+      off_time_latest: "11:00"
+      on_time_earliest: "16:00"
+      on_time_latest: "20:00"
+  - service: script.time_sun_manager
+    metadata: {}
+    data:
+      label_name: Rollladen OG kein Schlafzimmer
+      off_time_earliest: "06:30"
+      off_time_latest: "10:00"
+      on_time_earliest: "16:00"
+      on_time_latest: "19:30"
+  - service: script.time_sun_manager
+    metadata: {}
+    data:
+      label_name: Rollladen OG im Schlafzimmer
+      off_time_earliest: "08:00"
+      off_time_latest: "10:00"
+      on_time_earliest: "16:00"
+      on_time_latest: "19:00"
+mode: single
