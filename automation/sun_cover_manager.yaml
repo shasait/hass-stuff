@@ -1,0 +1,70 @@
+alias: sun_cover_manager
+sequence:
+  - variables:
+      label_id: "{{ label_id(label_name) }}"
+      sun_azimuth_above_gt_below: "{{ sun_azimuth_above > sun_azimuth_below }}"
+      sun_azimuth: "{{ state_attr('sun.sun', 'azimuth') }}"
+      sun_azimuth_above_match: "{{ sun_azimuth > sun_azimuth_above }}"
+      sun_azimuth_below_match: "{{ sun_azimuth < sun_azimuth_below }}"
+      after_time_latest_action: "{{ now() > today_at(time_latest_action) }}"
+  - if:
+      - condition: template
+        value_template: |
+          {{
+            ( sun_azimuth_above_gt_below and ( sun_azimuth_above_match or sun_azimuth_below_match ) )
+            or
+            ( not sun_azimuth_above_gt_below and sun_azimuth_above_match and sun_azimuth_below_match )
+          }}
+        alias: If sun azimuth is in provided range
+      - condition: numeric_state
+        entity_id: sun.sun
+        attribute: elevation
+        above: 22
+      - condition: numeric_state
+        entity_id: weather.forecast_home
+        attribute: temperature
+        above: 20
+      - condition: numeric_state
+        entity_id: weather.forecast_home
+        attribute: cloud_coverage
+        below: 90
+    then:
+      - if:
+          - condition: template
+            value_template: |
+              {{
+                  is_state('input_boolean.sun_cover_manager_triggered_' ~ label_id, 'off')
+              }}
+        then:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.sun_cover_manager_triggered_{{ label_id }}
+          - service: cover.set_cover_position
+            data:
+              position: 20
+            target:
+              label_id: "{{ label_id }}"
+    else:
+      - if:
+          - condition: template
+            value_template: |
+              {{
+                  is_state('input_boolean.sun_cover_manager_triggered_' ~ label_id, 'on')
+              }}
+        then:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.sun_cover_manager_triggered_{{ label_id }}
+          - if:
+              - condition: template
+                value_template: |
+                  {{
+                      not after_time_latest_action
+                  }}
+            then:
+              - service: cover.set_cover_position
+                data:
+                  position: 100
+                target:
+                  label_id: "{{ label_id }}"
+mode: queued
