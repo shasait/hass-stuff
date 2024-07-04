@@ -1,0 +1,21 @@
+alias: time_sun_manager
+sequence:
+  - service: script.time_sun_helper
+    data:
+      time_earliest: "{{ on_time_earliest }}"
+      time_latest: "{{ on_time_latest }}"
+      time_end: "{{ off_time_earliest }}"
+      sun_state: down
+      turn_action: turn_on
+      cover_action: close_cover
+      label_name: "{{ label_name }}"
+  - service: script.time_sun_helper
+    data:
+      time_earliest: "{{ off_time_earliest }}"
+      time_latest: "{{ off_time_latest }}"
+      time_end: "{{ on_time_earliest }}"
+      sun_state: up
+      turn_action: turn_off
+      cover_action: open_cover
+      label_name: "{{ label_name }}"
+mode: queued
