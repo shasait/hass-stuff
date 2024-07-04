@@ -1,0 +1,54 @@
+alias: time_sun_helper
+sequence:
+  - variables:
+      label_id: "{{ label_id(label_name) }}"
+      check_state: "{% if turn_action == 'turn_on' -%}off{% else -%}on{% endif %}"
+      time_earliest_before_latest: "{{ today_at(time_earliest) < today_at(time_latest) }}"
+      time_latest_before_end: "{{ today_at(time_latest) < today_at(time_end) }}"
+      after_time_earliest: "{{ now() > today_at(time_earliest) }}"
+      after_time_latest: "{{ now() > today_at(time_latest) }}"
+      after_time_end: "{{ now() > today_at(time_end) }}"
+      in_range_earliest_latest: |
+        {{
+             (time_earliest_before_latest and after_time_earliest and not after_time_latest)
+          or (not time_earliest_before_latest and (after_time_earliest or not after_time_latest))
+        }}
+      in_range_latest_end: |
+        {{
+             (time_latest_before_end and after_time_latest and not after_time_end)
+          or (not time_latest_before_end and (after_time_latest or not after_time_end))
+        }}
+      sun_is_down: "{{ state_attr('sun.sun', 'elevation') < 2 }}"
+      sun_matches: |
+        {{
+             (sun_state == 'down' and sun_is_down)
+          or (sun_state == 'up' and not sun_is_down)
+        }}
+  - if:
+      - condition: template
+        value_template: |
+          {{
+            is_state('input_boolean.triggered_label_' ~ label_id, check_state)
+          }}
+        alias: If triggered state matches
+      - condition: template
+        value_template: |
+          {{
+            (in_range_earliest_latest and sun_matches) or in_range_latest_end
+          }}
+        alias: If time and/or sun
+    then:
+      - service_template: input_boolean.{{ turn_action }}
+        target:
+          entity_id: input_boolean.triggered_label_{{ label_id }}
+      - service_template: cover.{{ cover_action }}
+        target:
+          label_id: "{{ label_id }}"
+      - service_template: switch.{{ turn_action }}
+        target:
+          label_id: "{{ label_id }}"
+      - service_template: light.{{ turn_action }}
+        target:
+          label_id: "{{ label_id }}"
+mode: queued
+max: 10
