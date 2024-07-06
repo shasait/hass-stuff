@@ -1,5 +1,11 @@
 alias: sun_cover_manager
 sequence:
+  - service: weather.get_forecasts
+    data:
+      type: hourly
+    target:
+      entity_id: weather.forecast_home
+    response_variable: hourly_forecast
   - variables:
       label_id: "{{ label_id(label_name) }}"
       sun_azimuth_above_gt_below: "{{ sun_azimuth_above > sun_azimuth_below }}"
@@ -7,12 +13,9 @@ sequence:
       sun_azimuth_above_match: "{{ sun_azimuth > sun_azimuth_above }}"
       sun_azimuth_below_match: "{{ sun_azimuth < sun_azimuth_below }}"
       after_time_latest_action: "{{ now() > today_at(time_latest_action) }}"
-  - service: weather.get_forecasts
-    data:
-      type: hourly
-    target:
-      entity_id: weather.forecast_home
-    response_variable: hourly_forecast
+      cloud_coverage: >-
+        {{ hourly_forecast['weather.forecast_home'].forecast[0].cloud_coverage
+        }}
   - if:
       - condition: template
         value_template: |
@@ -31,9 +34,8 @@ sequence:
         attribute: temperature
         above: 20
       - condition: template
-        value_template: >
-          {{ hourly_forecast['weather.forecast_home'].forecast[0].cloud_coverage
-          < 90 }}
+        value_template: |
+          {{ cloud_coverage < 90 }}
         alias: If cloud_coverage is below 90
     then:
       - if:
